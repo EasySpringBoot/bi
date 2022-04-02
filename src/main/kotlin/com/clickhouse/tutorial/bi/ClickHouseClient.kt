@@ -43,6 +43,9 @@ class ClickHouseClient {
     @Resource
     lateinit var clickHouseDataSourceConfig: ClickHouseDataSourceConfig
 
+    /**
+     * TODO 性能考虑, 需要实现 ClickHouse DB 连接池. (此处省略)
+     */
     fun getConn(): Connection {
         val conn: ClickHouseConnection
         val properties = ClickHouseProperties()
