@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>BI</title>
+</head>
+<body>
+
+<div>
+    <a href="/bi/">首页</a>
+    <a href="/bi/query">SQL查询</a>
+</div>
+
+<div>ClickHouse查询SQL:</div>
+<div id="container" style="width:100%;height:600px;border:1px solid grey"></div>
+
+<button id="executeBtn">执行SQL</button>
+<button id="formatCodeBtn">格式化SQL</button>
+
+<div>执行结果:</div>
+<div id="result"></div>
+
+<script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js">
+<script src="/requirejs/require.js"></script>
+<!--https://github.com/monaddle/monaco-editor-->
+<script src="/monaco-editor/min/vs/loader.js"></script>
+<link
+        data-name="/vs/editor/editor.main"
+        href="/monaco-editor/min/vs/editor/editor.main.css"
+        rel="stylesheet"
+/>
+
+<script>
+    var date = new Date();
+    var el = document.getElementById('container');
+    var executeBtn = document.getElementById('executeBtn');
+    var formatCodeBtn = document.getElementById('formatCodeBtn');
+
+    require.config({
+        paths:
+            {
+                'vs': '/monaco-editor/min/vs'
+            }
+    });
+
+    require(['vs/editor/editor.main'], function () {
+        var defaultCode = `
+------------------------------ClickHouse SQL Syntax-----------------------------
+-- [WITH expr_list|(subquery)]
+-- SELECT [DISTINCT [ON (column1, column2, ...)]] expr_list
+-- [FROM [db.]table | (subquery) | table_function] [FINAL]
+-- [SAMPLE sample_coeff]
+-- [ARRAY JOIN ...]
+-- [GLOBAL] [ANY|ALL|ASOF] [INNER|LEFT|RIGHT|FULL|CROSS] [OUTER|SEMI|ANTI]
+-- JOIN (subquery)|table (ON <expr_list>)|(USING <column_list>)
+-- [PREWHERE expr]
+-- [WHERE expr]
+-- [GROUP BY expr_list] [WITH ROLLUP|WITH CUBE] [WITH TOTALS]
+-- [HAVING expr]
+-- [ORDER BY expr_list] [WITH FILL] [FROM expr] [TO expr] [STEP expr]
+-- [LIMIT [offset_value, ]n BY columns]
+-- [LIMIT [n, ]m] [WITH TIES]
+-- [SETTINGS ...]
+-- [UNION  ...]
+-- [INTO OUTFILE filename [COMPRESSION type] ]
+-- [FORMAT format]
+--------------${date}----------------
+
+select uniqExact(UserID) cnt, Age age
+from tutorial.hits_v1
+where EventDate = '2014-03-18'
+group by Age
+order by cnt desc
+limit 10;
+
+
+
+
+
+
+
+`;
+
+        var editor = monaco.editor.create(
+            el,
+            {
+                language: 'sql',
+                value: defaultCode,
+                theme: 'vs-light',
+                lineNumbers: 'on',
+                roundedSelection: false,
+                scrollBeyondLastLine: false,
+                readOnly: false,
+                autoIndent: true, // 自动缩进
+                scrollbar: {
+                    // Subtle shadows to the left & top. Defaults to true.
+                    useShadows: false,
+                    // Render vertical arrows. Defaults to false.
+                    verticalHasArrows: true,
+                    // Render horizontal arrows. Defaults to false.
+                    horizontalHasArrows: true,
+                    // Render vertical scrollbar.
+                    // Accepted values: 'auto', 'visible', 'hidden'.
+                    // Defaults to 'auto'
+                    vertical: 'visible',
+                    // Render horizontal scrollbar.
+                    // Accepted values: 'auto', 'visible', 'hidden'.
+                    // Defaults to 'auto'
+                    horizontal: 'visible',
+                    verticalScrollbarSize: 17,
+                    horizontalScrollbarSize: 17,
+                    arrowSize: 30
+                }
+            });
+
+        editor.revealPositionInCenter({lineNumber: 50, column: 120});
+
+        formatCodeBtn.onclick = function () {
+            editor.trigger('format code', 'editor.action.formatDocument',{});
+            editor.setValue(editor.getValue());
+        }
+
+        executeBtn.onclick = function () {
+            var sql = editor.getValue();
+            console.log(sql);
+
+            $.ajax({
+                url: '/bi/v1/api/query',
+                data:{'sql': sql},
+                type: 'POST',
+                success: function (data) {
+                    console.log(data)
+
+                    $('#result').html(JSON.stringify(data));
+
+                },
+                error: function (xhr, status, error) {
+                    console.log(error)
+                }
+            });
+        }
+
+    });
+
+
+</script>
+</body>
+</html>

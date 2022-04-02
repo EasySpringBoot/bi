@@ -1,0 +1,24 @@
+server:
+  address: 127.0.0.1
+  port: 8080
+
+
+
+spring:
+  thymeleaf:
+    cache: false
+    encoding: utf-8
+    mode: HTML5
+    prefix: classpath:/templates/
+    suffix: .html
+  datasource:
+    clickhouse:
+      url: jdbc:clickhouse://127.0.0.1:8123
+      database: tutorial
+      username: default
+      password: 7Dv7Ib0g
+      socketTimeout: 60000
+
+logging:
+  level:
+    root: INFO
